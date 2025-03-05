@@ -2,6 +2,7 @@
 
 use {
     crate::stable_vec::StableVec,
+    abi_stable::StableAbi,
     solana_instruction::{AccountMeta, Instruction},
     solana_pubkey::Pubkey,
     std::fmt::Debug,
@@ -28,7 +29,7 @@ use {
 /// let instruction = Instruction { program_id, accounts, data };
 /// let instruction = StableInstruction::from(instruction);
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, StableAbi)]
 #[repr(C)]
 pub struct StableInstruction {
     pub accounts: StableVec<AccountMeta>,
@@ -38,6 +39,16 @@ pub struct StableInstruction {
 
 impl From<Instruction> for StableInstruction {
     fn from(other: Instruction) -> Self {
+        Self {
+            accounts: other.accounts.into(),
+            data: other.data.into(),
+            program_id: other.program_id,
+        }
+    }
+}
+
+impl From<StableInstruction> for Instruction {
+    fn from(other: StableInstruction) -> Self {
         Self {
             accounts: other.accounts.into(),
             data: other.data.into(),

@@ -20,6 +20,7 @@ use {
         compiled_instruction::CompiledInstruction, compiled_keys::CompiledKeys,
         inline_nonce::advance_nonce_account_instruction, MessageHeader,
     },
+    abi_stable::{std_types::RVec, StableAbi},
     solana_hash::Hash,
     solana_instruction::Instruction,
     solana_pubkey::Pubkey,
@@ -41,8 +42,8 @@ fn compile_instruction(ix: &Instruction, keys: &[Pubkey]) -> CompiledInstruction
 
     CompiledInstruction {
         program_id_index: position(keys, &ix.program_id),
-        data: ix.data.clone(),
-        accounts,
+        data: ix.data.clone().into(),
+        accounts: accounts.into(),
     }
 }
 
@@ -64,6 +65,7 @@ fn compile_instructions(ixs: &[Instruction], keys: &[Pubkey]) -> Vec<CompiledIns
 /// redundantly specifying the fee-payer is not strictly required.
 // NOTE: Serialization-related changes must be paired with the custom serialization
 // for versioned messages in the `RemainingLegacyMessage` struct.
+#[repr(C)]
 #[cfg_attr(
     feature = "frozen-abi",
     frozen_abi(digest = "GXpvLNiMCnjnZpQEDKpc2NBpsqmRnAX7ZTCy9JmvG8Dg"),
@@ -74,23 +76,23 @@ fn compile_instructions(ixs: &[Instruction], keys: &[Pubkey]) -> Vec<CompiledIns
     derive(Deserialize, Serialize),
     serde(rename_all = "camelCase")
 )]
-#[derive(Default, Debug, PartialEq, Eq, Clone)]
+#[derive(Default, Debug, PartialEq, Eq, Clone, StableAbi)]
 pub struct Message {
     /// The message header, identifying signed and read-only `account_keys`.
     // NOTE: Serialization-related changes must be paired with the direct read at sigverify.
     pub header: MessageHeader,
 
     /// All the account keys used by this transaction.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub account_keys: Vec<Pubkey>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub account_keys: RVec<Pubkey>,
 
     /// The id of a recent ledger entry.
     pub recent_blockhash: Hash,
 
     /// Programs that will be executed in sequence and committed in one atomic transaction if all
     /// succeed.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub instructions: Vec<CompiledInstruction>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub instructions: RVec<CompiledInstruction>,
 }
 
 impl Sanitize for Message {
@@ -422,9 +424,9 @@ impl Message {
                 num_readonly_signed_accounts,
                 num_readonly_unsigned_accounts,
             },
-            account_keys,
+            account_keys: account_keys.into(),
             recent_blockhash,
-            instructions,
+            instructions: instructions.into(),
         }
     }
 
