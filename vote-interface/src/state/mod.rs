@@ -10,12 +10,17 @@ use serde_derive::{Deserialize, Serialize};
 use solana_frozen_abi_macro::{frozen_abi, AbiExample};
 use {
     crate::{authorized_voters::AuthorizedVoters, error::VoteError},
+    abi_stable::StableAbi,
     solana_clock::{Clock, Epoch, Slot, UnixTimestamp},
     solana_hash::Hash,
     solana_instruction::error::InstructionError,
     solana_pubkey::Pubkey,
     solana_rent::Rent,
-    std::{collections::VecDeque, fmt::Debug},
+    std::{
+        collections::VecDeque,
+        fmt::Debug,
+        ops::{Deref, DerefMut},
+    },
 };
 #[cfg(test)]
 use {
@@ -79,9 +84,10 @@ impl Vote {
     }
 }
 
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Default, Debug, PartialEq, Eq, Copy, Clone, StableAbi)]
 #[cfg_attr(test, derive(Arbitrary))]
 pub struct Lockout {
     slot: Slot,
@@ -129,9 +135,10 @@ impl Lockout {
     }
 }
 
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Default, Debug, PartialEq, Eq, Copy, Clone, StableAbi)]
 #[cfg_attr(test, derive(Arbitrary))]
 pub struct LandedVote {
     // Latency is the difference in slot number between the slot that was voted on (lockout.slot) and the slot in
@@ -139,6 +146,19 @@ pub struct LandedVote {
     // software which recorded vote latencies, latency is recorded as 0.
     pub latency: u8,
     pub lockout: Lockout,
+}
+
+impl Deref for LandedVote {
+    type Target = Lockout;
+    fn deref(&self) -> &Self::Target {
+        &self.lockout
+    }
+}
+
+impl DerefMut for LandedVote {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.lockout
+    }
 }
 
 impl LandedVote {
@@ -351,9 +371,10 @@ pub struct VoteAuthorizeCheckedWithSeedArgs {
     pub current_authority_derived_key_seed: String,
 }
 
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, StableAbi)]
 #[cfg_attr(test, derive(Arbitrary))]
 pub struct BlockTimestamp {
     pub slot: Slot,

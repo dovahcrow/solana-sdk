@@ -1,15 +1,19 @@
 use {
-    crate::versioned::VersionedTransaction, solana_message::SanitizedVersionedMessage,
-    solana_sanitize::SanitizeError, solana_signature::Signature,
+    crate::versioned::VersionedTransaction,
+    abi_stable::{std_types::RVec, StableAbi},
+    solana_message::SanitizedVersionedMessage,
+    solana_sanitize::SanitizeError,
+    solana_signature::Signature,
 };
 
 /// Wraps a sanitized `VersionedTransaction` to provide a safe API
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[repr(C)]
+#[derive(Clone, Debug, PartialEq, Eq, StableAbi)]
 pub struct SanitizedVersionedTransaction {
     /// List of signatures
-    pub(crate) signatures: Vec<Signature>,
+    pub signatures: RVec<Signature>,
     /// Message to sign.
-    pub(crate) message: SanitizedVersionedMessage,
+    pub message: SanitizedVersionedMessage,
 }
 
 impl TryFrom<VersionedTransaction> for SanitizedVersionedTransaction {
@@ -34,7 +38,7 @@ impl SanitizedVersionedTransaction {
 
     /// Consumes the SanitizedVersionedTransaction, returning the fields individually.
     pub fn destruct(self) -> (Vec<Signature>, SanitizedVersionedMessage) {
-        (self.signatures, self.message)
+        (self.signatures.into(), self.message)
     }
 }
 
