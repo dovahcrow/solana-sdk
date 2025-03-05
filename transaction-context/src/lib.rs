@@ -80,7 +80,7 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
 #[derive(Clone, Debug, PartialEq)]
 pub struct TransactionAccounts {
     accounts: Vec<RefCell<AccountSharedData>>,
-    touched_flags: RefCell<Box<[bool]>>,
+    pub touched_flags: RefCell<Box<[bool]>>,
 }
 
 impl TransactionAccounts {

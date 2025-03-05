@@ -15,6 +15,7 @@ all-features = true
 rustdoc-args = ["--cfg=docsrs"]
 
 [dependencies]
+abi_stable = { workspace = true }
 borsh = { workspace = true, optional = true }
 bs58 = { workspace = true, default-features = false }
 bytemuck = { workspace = true, optional = true }
