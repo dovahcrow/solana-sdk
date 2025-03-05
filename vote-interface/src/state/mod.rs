@@ -6,12 +6,18 @@ use arbitrary::Arbitrary;
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
 use solana_frozen_abi_macro::AbiExample;
+#[cfg(feature = "abi-stable")]
+use abi_stable::StableAbi;
 use {
     crate::authorized_voters::AuthorizedVoters,
     solana_clock::{Epoch, Slot, UnixTimestamp},
     solana_pubkey::Pubkey,
     solana_rent::Rent,
-    std::{collections::VecDeque, fmt::Debug},
+    std::{
+        collections::VecDeque,
+        fmt::Debug,
+        ops::{Deref, DerefMut},
+    },
 };
 #[cfg(test)]
 use {arbitrary::Unstructured, solana_epoch_schedule::MAX_LEADER_SCHEDULE_EPOCH_OFFSET};
@@ -49,10 +55,11 @@ pub const VOTE_CREDITS_GRACE_SLOTS: u8 = 2;
 // Maximum number of credits to award for a vote; this number of credits is awarded to votes on slots that land within the grace period. After that grace period, vote credits are reduced.
 pub const VOTE_CREDITS_MAXIMUM_PER_SLOT: u8 = 16;
 
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
-#[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
 pub struct Lockout {
     slot: Slot,
     confirmation_count: u32,
@@ -102,16 +109,30 @@ impl Lockout {
     }
 }
 
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Default, Debug, PartialEq, Eq, Copy, Clone)]
-#[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
 pub struct LandedVote {
     // Latency is the difference in slot number between the slot that was voted on (lockout.slot) and the slot in
     // which the vote that added this Lockout landed.  For votes which were cast before versions of the validator
     // software which recorded vote latencies, latency is recorded as 0.
     pub latency: u8,
     pub lockout: Lockout,
+}
+
+impl Deref for LandedVote {
+    type Target = Lockout;
+    fn deref(&self) -> &Self::Target {
+        &self.lockout
+    }
+}
+
+impl DerefMut for LandedVote {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.lockout
+    }
 }
 
 impl LandedVote {
@@ -139,8 +160,10 @@ impl From<Lockout> for LandedVote {
     }
 }
 
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
 pub struct BlockTimestamp {

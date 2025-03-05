@@ -18,10 +18,11 @@ rustdoc-args = ["--cfg=docsrs"]
 [features]
 borsh = ["dep:borsh", "std"]
 bytemuck = ["dep:bytemuck", "dep:bytemuck_derive"]
-default = ["std"]
+default = ["std", "abi-stable"]
 frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro", "std"]
 serde = ["dep:serde", "dep:serde_derive"]
 std = []
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 borsh = { workspace = true, optional = true }
@@ -38,6 +39,8 @@ solana-frozen-abi-macro = { workspace = true, optional = true, features = [
     "frozen-abi",
 ] }
 solana-sanitize = { workspace = true }
+
+abi_stable = { workspace = true, optional = true }
 
 [dev-dependencies]
 bs58 = { workspace = true, default-features = false, features = ["alloc"] }

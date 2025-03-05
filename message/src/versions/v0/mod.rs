@@ -14,11 +14,13 @@ pub use loaded::*;
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
 use solana_frozen_abi_macro::AbiExample;
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec,  StableAbi};
 use {
     crate::{
         compiled_instruction::CompiledInstruction,
         compiled_keys::{CompileError, CompiledKeys},
-        AccountKeys, AddressLookupTableAccount, MessageHeader,
+        AccountKeys, HashedAddressLookupTableAccount, MessageHeader,
     },
     solana_address::Address,
     solana_hash::Hash,
@@ -32,22 +34,24 @@ mod loaded;
 
 /// Address table lookups describe an on-chain address lookup table to use
 /// for loading more readonly and writable accounts in a single tx.
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(
     feature = "serde",
     derive(Deserialize, Serialize),
     serde(rename_all = "camelCase")
 )]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct MessageAddressTableLookup {
     /// Address lookup table account key
     pub account_key: Address,
     /// List of indexes used to load writable account addresses
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub writable_indexes: Vec<u8>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub writable_indexes: RVec<u8>,
     /// List of indexes used to load readonly account addresses
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub readonly_indexes: Vec<u8>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub readonly_indexes: RVec<u8>,
 }
 
 /// A Solana transaction message (v0).
@@ -57,12 +61,14 @@ pub struct MessageAddressTableLookup {
 ///
 /// See the crate documentation for further description.
 ///
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(
     feature = "serde",
     derive(Deserialize, Serialize),
     serde(rename_all = "camelCase")
 )]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct Message {
     /// The message header, identifying signed and read-only `account_keys`.
@@ -71,8 +77,8 @@ pub struct Message {
     pub header: MessageHeader,
 
     /// List of accounts loaded by this transaction.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub account_keys: Vec<Address>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub account_keys: RVec<Address>,
 
     /// The blockhash of a recent block.
     pub recent_blockhash: Hash,
@@ -90,13 +96,13 @@ pub struct Message {
     ///   1) message `account_keys`
     ///   2) ordered list of keys loaded from `writable` lookup table indexes
     ///   3) ordered list of keys loaded from `readable` lookup table indexes
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub instructions: Vec<CompiledInstruction>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub instructions: RVec<CompiledInstruction>,
 
     /// List of address table lookups used to load additional accounts
     /// for this transaction.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub address_table_lookups: Vec<MessageAddressTableLookup>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub address_table_lookups: RVec<MessageAddressTableLookup>,
 }
 
 impl Message {
@@ -266,7 +272,7 @@ impl Message {
     pub fn try_compile(
         payer: &Address,
         instructions: &[Instruction],
-        address_lookup_table_accounts: &[AddressLookupTableAccount],
+        address_lookup_table_accounts: &[HashedAddressLookupTableAccount],
         recent_blockhash: Hash,
     ) -> Result<Self, CompileError> {
         let mut compiled_keys = CompiledKeys::compile(instructions, Some(*payer));
@@ -289,10 +295,10 @@ impl Message {
 
         Ok(Self {
             header,
-            account_keys: static_keys,
+            account_keys: static_keys.into(),
             recent_blockhash,
-            instructions,
-            address_table_lookups,
+            instructions: instructions.into(),
+            address_table_lookups: address_table_lookups.into(),
         })
     }
 

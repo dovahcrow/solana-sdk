@@ -9,11 +9,17 @@ homepage = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
 
+[features]
+default = ["abi-stable"]
+abi-stable = ["dep:abi_stable"]
+
 [dependencies]
 solana-instruction = { workspace = true, default-features = false, features = [
     "std",
 ] }
 solana-pubkey = { workspace = true, default-features = false }
+
+abi_stable = { workspace = true, optional = true }
 
 [dev-dependencies]
 memoffset = { workspace = true }

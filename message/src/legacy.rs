@@ -15,6 +15,8 @@
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
 use solana_frozen_abi_macro::{frozen_abi, AbiExample};
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec,  StableAbi};
 use {
     crate::{
         compiled_instruction::CompiledInstruction, compiled_keys::CompiledKeys,
@@ -41,8 +43,8 @@ fn compile_instruction(ix: &Instruction, keys: &[Address]) -> CompiledInstructio
 
     CompiledInstruction {
         program_id_index: position(keys, &ix.program_id),
-        data: ix.data.clone(),
-        accounts,
+        data: ix.data.clone().into(),
+        accounts: accounts.into(),
     }
 }
 
@@ -64,6 +66,7 @@ fn compile_instructions(ixs: &[Instruction], keys: &[Address]) -> Vec<CompiledIn
 /// redundantly specifying the fee-payer is not strictly required.
 // NOTE: Serialization-related changes must be paired with the custom serialization
 // for versioned messages in the `RemainingLegacyMessage` struct.
+#[repr(C)]
 #[cfg_attr(
     feature = "frozen-abi",
     frozen_abi(digest = "GXpvLNiMCnjnZpQEDKpc2NBpsqmRnAX7ZTCy9JmvG8Dg"),
@@ -74,6 +77,7 @@ fn compile_instructions(ixs: &[Instruction], keys: &[Address]) -> Vec<CompiledIn
     derive(Deserialize, Serialize),
     serde(rename_all = "camelCase")
 )]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Default, Debug, PartialEq, Eq, Clone)]
 pub struct Message {
     /// The message header, identifying signed and read-only `account_keys`.
@@ -81,7 +85,11 @@ pub struct Message {
     pub header: MessageHeader,
 
     /// All the account keys used by this transaction.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
+    #[cfg_attr(all(feature = "serde", feature = "abi-stable"), serde(with = "solana_short_vec::short_rvec"))]
+    #[cfg(all(feature = "serde", feature = "abi-stable"))]
+    pub account_keys: RVec<Address>,
+    #[cfg_attr(all(feature = "serde", not(feature = "abi-stable")), serde(with = "solana_short_vec::short_vec"))]
+    #[cfg(all(feature = "serde", not(feature = "abi-stable")))]
     pub account_keys: Vec<Address>,
 
     /// The id of a recent ledger entry.
@@ -89,8 +97,8 @@ pub struct Message {
 
     /// Programs that will be executed in sequence and committed in one atomic transaction if all
     /// succeed.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub instructions: Vec<CompiledInstruction>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub instructions: RVec<CompiledInstruction>,
 }
 
 impl Sanitize for Message {
@@ -422,9 +430,9 @@ impl Message {
                 num_readonly_signed_accounts,
                 num_readonly_unsigned_accounts,
             },
-            account_keys,
+            account_keys: account_keys.into(),
             recent_blockhash,
-            instructions,
+            instructions: instructions.into(),
         }
     }
 

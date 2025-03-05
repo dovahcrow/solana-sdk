@@ -16,6 +16,7 @@ all-features = true
 rustdoc-args = ["--cfg=docsrs"]
 
 [features]
+default = ["abi-stable"]
 bincode = [
     "dep:bincode",
     "dep:solana-serialize-utils",
@@ -45,6 +46,7 @@ serde = [
     "solana-hash/serde",
     "solana-pubkey/serde",
 ]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 arbitrary = { workspace = true, features = ["derive"], optional = true }
@@ -72,6 +74,8 @@ solana-serde-varint = { workspace = true, optional = true }
 solana-serialize-utils = { workspace = true, optional = true }
 solana-short-vec = { workspace = true, optional = true }
 solana-system-interface = { workspace = true, features = ["bincode"], optional = true }
+
+abi_stable = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "solana")'.dependencies]
 solana-serialize-utils = { workspace = true }

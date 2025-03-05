@@ -2,7 +2,12 @@
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
 use solana_frozen_abi_macro::AbiExample;
-use {solana_address::Address, solana_sanitize::Sanitize};
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec, StableAbi};
+use {
+    solana_address::Address,
+    solana_sanitize::Sanitize,
+};
 
 /// A compact encoding of an instruction.
 ///
@@ -11,22 +16,24 @@ use {solana_address::Address, solana_sanitize::Sanitize};
 /// construction of `Message`. Most users will not interact with it directly.
 ///
 /// [`Message`]: crate::Message
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(
     feature = "serde",
     derive(Deserialize, Serialize),
     serde(rename_all = "camelCase")
 )]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct CompiledInstruction {
     /// Index into the transaction keys array indicating the program account that executes this instruction.
     pub program_id_index: u8,
     /// Ordered indices into the transaction keys array indicating which accounts to pass to the program.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub accounts: Vec<u8>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub accounts: RVec<u8>,
     /// The program input data.
-    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec"))]
-    pub data: Vec<u8>,
+    #[cfg_attr(feature = "serde", serde(with = "solana_short_vec::short_rvec"))]
+    pub data: RVec<u8>,
 }
 
 impl Sanitize for CompiledInstruction {}
@@ -37,16 +44,16 @@ impl CompiledInstruction {
         let data = bincode::serialize(data).unwrap();
         Self {
             program_id_index: program_ids_index,
-            accounts,
-            data,
+            accounts: accounts.into(),
+            data: data.into(),
         }
     }
 
     pub fn new_from_raw_parts(program_id_index: u8, data: Vec<u8>, accounts: Vec<u8>) -> Self {
         Self {
             program_id_index,
-            accounts,
-            data,
+            accounts: accounts.into(),
+            data: data.into(),
         }
     }
 

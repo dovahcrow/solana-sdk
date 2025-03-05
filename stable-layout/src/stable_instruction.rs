@@ -1,5 +1,7 @@
 //! `Instruction`, with a stable memory layout
 
+#[cfg(feature = "abi-stable")]
+use abi_stable::{ StableAbi};
 use {
     crate::stable_vec::StableVec,
     solana_instruction::{AccountMeta, Instruction},
@@ -28,7 +30,8 @@ use {
 /// let instruction = Instruction { program_id, accounts, data };
 /// let instruction = StableInstruction::from(instruction);
 /// ```
-#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
+#[derive(Debug, PartialEq, Clone)]
 #[repr(C)]
 pub struct StableInstruction {
     pub accounts: StableVec<AccountMeta>,
@@ -38,6 +41,16 @@ pub struct StableInstruction {
 
 impl From<Instruction> for StableInstruction {
     fn from(other: Instruction) -> Self {
+        Self {
+            accounts: other.accounts.into(),
+            data: other.data.into(),
+            program_id: other.program_id,
+        }
+    }
+}
+
+impl From<StableInstruction> for Instruction {
+    fn from(other: StableInstruction) -> Self {
         Self {
             accounts: other.accounts.into(),
             data: other.data.into(),
