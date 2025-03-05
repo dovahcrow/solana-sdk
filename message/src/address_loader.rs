@@ -3,7 +3,7 @@ use {
     solana_transaction_error::AddressLoaderError,
 };
 
-pub trait AddressLoader: Clone {
+pub trait AddressLoader {
     fn load_addresses(
         self,
         lookups: &[MessageAddressTableLookup],

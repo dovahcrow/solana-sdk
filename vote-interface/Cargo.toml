@@ -47,6 +47,7 @@ serde = [
 ]
 
 [dependencies]
+abi_stable = { workspace = true }
 arbitrary = { workspace = true, features = ["derive"], optional = true }
 bincode = { workspace = true, optional = true }
 cfg_eval = { workspace = true, optional = true }

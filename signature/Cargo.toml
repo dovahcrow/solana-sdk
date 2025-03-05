@@ -28,6 +28,7 @@ verify = ["dep:ed25519-dalek"]
 [dependencies]
 bytemuck = { workspace = true, optional = true }
 bytemuck_derive = { workspace = true, optional = true }
+abi_stable = { workspace = true }
 ed25519-dalek = { workspace = true, optional = true }
 five8 = { workspace = true }
 rand = { workspace = true, optional = true }

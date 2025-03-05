@@ -38,6 +38,7 @@ serde = [
 verify = ["blake3", "solana-signature/verify"]
 
 [dependencies]
+abi_stable = { workspace = true }
 bincode = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 serde_derive = { workspace = true, optional = true }

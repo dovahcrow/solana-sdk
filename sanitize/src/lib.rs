@@ -1,6 +1,7 @@
 //! A trait for sanitizing values and members of over the wire messages.
-
+//! 
 use core::{error::Error, fmt};
+use abi_stable::std_types::RVec;
 
 #[derive(PartialEq, Debug, Eq, Clone)]
 pub enum SanitizeError {
@@ -37,6 +38,15 @@ pub trait Sanitize {
 }
 
 impl<T: Sanitize> Sanitize for Vec<T> {
+    fn sanitize(&self) -> Result<(), SanitizeError> {
+        for x in self.iter() {
+            x.sanitize()?;
+        }
+        Ok(())
+    }
+}
+
+impl<T: Sanitize> Sanitize for RVec<T> {
     fn sanitize(&self) -> Result<(), SanitizeError> {
         for x in self.iter() {
             x.sanitize()?;

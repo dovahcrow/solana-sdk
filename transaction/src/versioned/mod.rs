@@ -9,6 +9,7 @@ use {
     solana_sdk_ids::system_program,
     solana_signature::Signature,
     std::cmp::Ordering,
+    abi_stable::{std_types::RVec, StableAbi},
 };
 #[cfg(feature = "serde")]
 use {
@@ -46,13 +47,14 @@ impl TransactionVersion {
 
 // NOTE: Serialization-related changes must be paired with the direct read at sigverify.
 /// An atomic transaction
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[derive(Debug, PartialEq, Default, Eq, Clone)]
+#[derive(Debug, PartialEq, Default, Eq, Clone, StableAbi)]
 pub struct VersionedTransaction {
     /// List of signatures
-    #[cfg_attr(feature = "serde", serde(with = "short_vec"))]
-    pub signatures: Vec<Signature>,
+    #[cfg_attr(feature = "serde", serde(with = "short_vec::short_rvec"))]
+    pub signatures: RVec<Signature>,
     /// Message to sign.
     pub message: VersionedMessage,
 }
@@ -101,7 +103,7 @@ impl VersionedTransaction {
             .collect::<std::result::Result<_, SignerError>>()?;
 
         let unordered_signatures = keypairs.try_sign_message(&message_data)?;
-        let signatures: Vec<Signature> = signature_indexes
+        let signatures: RVec<Signature> = signature_indexes
             .into_iter()
             .map(|index| {
                 unordered_signatures
