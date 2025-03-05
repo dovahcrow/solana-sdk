@@ -23,10 +23,10 @@ pub const MAX_TX_ACCOUNT_LOCKS: usize = 128;
 /// Sanitized transaction and the hash of its message
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SanitizedTransaction {
-    message: SanitizedMessage,
-    message_hash: Hash,
-    is_simple_vote_tx: bool,
-    signatures: Vec<Signature>,
+    pub message: SanitizedMessage,
+    pub message_hash: Hash,
+    pub is_simple_vote_tx: bool,
+    pub signatures: Vec<Signature>,
 }
 
 /// Set of accounts that must be locked for safe transaction processing
@@ -83,7 +83,7 @@ impl SanitizedTransaction {
             message,
             message_hash,
             is_simple_vote_tx,
-            signatures,
+            signatures: signatures.into(),
         })
     }
 
@@ -132,7 +132,7 @@ impl SanitizedTransaction {
                 reserved_account_keys,
             )),
             is_simple_vote_tx: false,
-            signatures: tx.signatures,
+            signatures: tx.signatures.into(),
         })
     }
 
@@ -202,11 +202,11 @@ impl SanitizedTransaction {
         let signatures = self.signatures.clone();
         match &self.message {
             SanitizedMessage::V0(sanitized_msg) => VersionedTransaction {
-                signatures,
+                signatures: signatures.into(),
                 message: VersionedMessage::V0(v0::Message::clone(&sanitized_msg.message)),
             },
             SanitizedMessage::Legacy(legacy_message) => VersionedTransaction {
-                signatures,
+                signatures: signatures.into(),
                 message: VersionedMessage::Legacy(legacy::Message::clone(&legacy_message.message)),
             },
         }

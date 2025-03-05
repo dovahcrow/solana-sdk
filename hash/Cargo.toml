@@ -24,6 +24,7 @@ serde = ["dep:serde", "dep:serde_derive"]
 std = []
 
 [dependencies]
+abi_stable = { workspace = true }
 borsh = { workspace = true, optional = true }
 bytemuck = { workspace = true, optional = true }
 bytemuck_derive = { workspace = true, optional = true }
