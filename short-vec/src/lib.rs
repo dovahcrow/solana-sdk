@@ -12,6 +12,19 @@ use {
     std::{convert::TryFrom, fmt, marker::PhantomData},
 };
 
+pub mod short_rvec {
+    pub use super::serialize;
+    use {super::*, abi_stable::std_types::RVec};
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<RVec<T>, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: Deserialize<'de>,
+    {
+        super::deserialize(deserializer).map(|v| v.into())
+    }
+}
+
 /// Same as u16, but serialized with 1 to 3 bytes. If the value is above
 /// 0x7f, the top bit is set and the remaining value is stored in the next
 /// bytes. Each byte follows the same pattern until the 3rd byte. The 3rd
