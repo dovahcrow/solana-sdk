@@ -1,9 +1,12 @@
 //! `Vec`, with a stable memory layout
 
-use std::{
-    marker::PhantomData,
-    mem::ManuallyDrop,
-    ops::{Deref, DerefMut},
+use {
+    abi_stable::StableAbi,
+    std::{
+        marker::PhantomData,
+        mem::ManuallyDrop,
+        ops::{Deref, DerefMut},
+    },
 };
 
 /// `Vec`, with a stable memory layout
@@ -27,6 +30,7 @@ use std::{
 /// let vec = StableVec::from(vec);
 /// ```
 #[repr(C)]
+#[derive(StableAbi)]
 pub struct StableVec<T> {
     pub addr: u64,
     pub cap: u64,
@@ -50,6 +54,15 @@ impl<T> StableVec<T> {
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
+    }
+}
+
+impl<T> Clone for StableVec<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        self.to_vec().into()
     }
 }
 

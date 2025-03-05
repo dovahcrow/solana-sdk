@@ -1,8 +1,3 @@
-#[cfg(not(target_os = "solana"))]
-use crate::{
-    v0::{LoadedAddresses, MessageAddressTableLookup},
-    AddressLookupTableAccount,
-};
 use {
     crate::{inline_nonce::is_advance_nonce_instruction_data, MessageHeader},
     core::fmt,
@@ -10,6 +5,14 @@ use {
     solana_instruction::Instruction,
     solana_sdk_ids::system_program,
     std::collections::BTreeMap,
+};
+#[cfg(not(target_os = "solana"))]
+use {
+    crate::{
+        v0::{LoadedAddresses, MessageAddressTableLookup},
+        HashedAddressLookupTableAccount,
+    },
+    std::collections::HashMap,
 };
 
 /// A helper struct to collect pubkeys compiled for a set of instructions
@@ -142,7 +145,7 @@ impl CompiledKeys {
     #[cfg(not(target_os = "solana"))]
     pub(crate) fn try_extract_table_lookup(
         &mut self,
-        lookup_table_account: &AddressLookupTableAccount,
+        lookup_table_account: &HashedAddressLookupTableAccount,
     ) -> Result<Option<(MessageAddressTableLookup, LoadedAddresses)>, CompileError> {
         let (writable_indexes, drained_writable_keys) = self
             .try_drain_keys_found_in_lookup_table(&lookup_table_account.addresses, |meta| {
@@ -161,8 +164,8 @@ impl CompiledKeys {
         Ok(Some((
             MessageAddressTableLookup {
                 account_key: lookup_table_account.key,
-                writable_indexes,
-                readonly_indexes,
+                writable_indexes: writable_indexes.into(),
+                readonly_indexes: readonly_indexes.into(),
             },
             LoadedAddresses {
                 writable: drained_writable_keys,
@@ -174,7 +177,7 @@ impl CompiledKeys {
     #[cfg(not(target_os = "solana"))]
     fn try_drain_keys_found_in_lookup_table(
         &mut self,
-        lookup_table_addresses: &[Address],
+        lookup_table_addresses: &HashMap<Address, usize>,
         key_meta_filter: impl Fn(&CompiledKeyMeta) -> bool,
     ) -> Result<(Vec<u8>, Vec<Address>), CompileError> {
         let mut lookup_table_indexes = Vec::new();
@@ -185,15 +188,11 @@ impl CompiledKeys {
             .iter()
             .filter_map(|(key, meta)| key_meta_filter(meta).then_some(key))
         {
-            for (key_index, key) in lookup_table_addresses.iter().enumerate() {
-                if key == search_key {
-                    let lookup_table_index = u8::try_from(key_index)
-                        .map_err(|_| CompileError::AddressTableLookupIndexOverflow)?;
-
-                    lookup_table_indexes.push(lookup_table_index);
-                    drained_keys.push(*search_key);
-                    break;
-                }
+            if let Some(key_index) = lookup_table_addresses.get(search_key) {
+                let lookup_table_index = u8::try_from(*key_index)
+                    .map_err(|_| CompileError::AddressTableLookupIndexOverflow)?;
+                lookup_table_indexes.push(lookup_table_index);
+                drained_keys.push(*search_key);
             }
         }
 

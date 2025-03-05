@@ -1,15 +1,21 @@
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec,  StableAbi};
 use {
-    crate::versioned::VersionedTransaction, solana_message::SanitizedVersionedMessage,
-    solana_sanitize::SanitizeError, solana_signature::Signature,
+    crate::versioned::VersionedTransaction,
+    solana_message::SanitizedVersionedMessage,
+    solana_sanitize::SanitizeError,
+    solana_signature::Signature,
 };
 
 /// Wraps a sanitized `VersionedTransaction` to provide a safe API
+#[repr(C)]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SanitizedVersionedTransaction {
     /// List of signatures
-    pub(crate) signatures: Vec<Signature>,
+    pub signatures: RVec<Signature>,
     /// Message to sign.
-    pub(crate) message: SanitizedVersionedMessage,
+    pub message: SanitizedVersionedMessage,
 }
 
 impl TryFrom<VersionedTransaction> for SanitizedVersionedTransaction {
@@ -34,7 +40,7 @@ impl SanitizedVersionedTransaction {
 
     /// Consumes the SanitizedVersionedTransaction, returning the fields individually.
     pub fn destruct(self) -> (Vec<Signature>, SanitizedVersionedMessage) {
-        (self.signatures, self.message)
+        (self.signatures.into(), self.message)
     }
 }
 

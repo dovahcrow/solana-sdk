@@ -2,6 +2,8 @@
 
 #![no_std]
 
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec};
 use core::{error::Error, fmt};
 
 #[derive(PartialEq, Debug, Eq, Clone)]
@@ -39,6 +41,16 @@ pub trait Sanitize {
 }
 
 impl<T: Sanitize> Sanitize for [T] {
+    fn sanitize(&self) -> Result<(), SanitizeError> {
+        for x in self.iter() {
+            x.sanitize()?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(feature = "abi-stable")]
+impl<T: Sanitize> Sanitize for RVec<T> {
     fn sanitize(&self) -> Result<(), SanitizeError> {
         for x in self.iter() {
             x.sanitize()?;

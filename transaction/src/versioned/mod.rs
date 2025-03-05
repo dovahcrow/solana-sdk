@@ -2,6 +2,8 @@
 
 #[cfg(feature = "bincode")]
 use solana_signer::{signers::Signers, SignerError};
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec,  StableAbi};
 use {
     crate::Transaction,
     solana_message::{inline_nonce::is_advance_nonce_instruction_data, VersionedMessage},
@@ -46,13 +48,15 @@ impl TransactionVersion {
 
 // NOTE: Serialization-related changes must be paired with the direct read at sigverify.
 /// An atomic transaction
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Debug, PartialEq, Default, Eq, Clone)]
 pub struct VersionedTransaction {
     /// List of signatures
-    #[cfg_attr(feature = "serde", serde(with = "short_vec"))]
-    pub signatures: Vec<Signature>,
+    #[cfg_attr(feature = "serde", serde(with = "short_vec::short_rvec"))]
+    pub signatures: RVec<Signature>,
     /// Message to sign.
     pub message: VersionedMessage,
 }
@@ -101,7 +105,7 @@ impl VersionedTransaction {
             .collect::<std::result::Result<_, SignerError>>()?;
 
         let unordered_signatures = keypairs.try_sign_message(&message_data)?;
-        let signatures: Vec<Signature> = signature_indexes
+        let signatures: RVec<Signature> = signature_indexes
             .into_iter()
             .map(|index| {
                 unordered_signatures
