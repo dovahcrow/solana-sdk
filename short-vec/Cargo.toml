@@ -10,6 +10,7 @@ license = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+abi_stable = { workspace = true }
 serde = { workspace = true }
 solana-frozen-abi = { workspace = true, optional = true, features = [
     "frozen-abi",
