@@ -24,7 +24,7 @@ pub fn set_syscall_stubs(syscall_stubs: Box<dyn SyscallStubs>) -> Box<dyn Syscal
 
 pub trait SyscallStubs: Sync + Send {
     fn sol_log(&self, message: &str) {
-        println!("{message}");
+        let _ = message;
     }
     fn sol_log_compute_units(&self) {
         sol_log("SyscallStubs: sol_log_compute_units() not available");
