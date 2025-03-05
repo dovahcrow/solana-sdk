@@ -1,4 +1,4 @@
-use solana_pubkey::Pubkey;
+use {abi_stable::StableAbi, solana_pubkey::Pubkey};
 
 /// Describes a single account read or written by a program during instruction
 /// execution.
@@ -21,7 +21,7 @@ use solana_pubkey::Pubkey;
     feature = "serde",
     derive(serde_derive::Serialize, serde_derive::Deserialize)
 )]
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, StableAbi)]
 pub struct AccountMeta {
     /// An account's public key.
     pub pubkey: Pubkey,
