@@ -5,6 +5,7 @@ use {
         compiled_instruction::CompiledInstruction, legacy::Message as LegacyMessage,
         v0::MessageAddressTableLookup, MessageHeader,
     },
+    abi_stable::StableAbi,
     solana_hash::Hash,
     solana_pubkey::Pubkey,
     solana_sanitize::{Sanitize, SanitizeError},
@@ -36,12 +37,13 @@ pub const MESSAGE_VERSION_PREFIX: u8 = 0x80;
 /// which message version is serialized starting from version `0`. If the first
 /// is bit is not set, all bytes are used to encode the legacy `Message`
 /// format.
+#[repr(C)]
 #[cfg_attr(
     feature = "frozen-abi",
     frozen_abi(digest = "2RTtea34NPrb8p9mWHCWjFh76cwP3MbjSmeoj5CXEBwN"),
     derive(AbiEnumVisitor, AbiExample)
 )]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, StableAbi)]
 pub enum VersionedMessage {
     Legacy(LegacyMessage),
     V0(v0::Message),
@@ -295,9 +297,9 @@ impl<'de> serde::Deserialize<'de> for VersionedMessage {
                                 num_readonly_unsigned_accounts: message
                                     .num_readonly_unsigned_accounts,
                             },
-                            account_keys: message.account_keys,
+                            account_keys: message.account_keys.into(),
                             recent_blockhash: message.recent_blockhash,
-                            instructions: message.instructions,
+                            instructions: message.instructions.into(),
                         }))
                     }
                     MessagePrefix::Versioned(version) => {

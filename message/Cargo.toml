@@ -10,6 +10,7 @@ license = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+abi_stable = { workspace = true }
 bincode = { workspace = true, optional = true }
 blake3 = { workspace = true, features = ["traits-preview"], optional = true }
 lazy_static = { workspace = true }
