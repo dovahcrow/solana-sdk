@@ -15,6 +15,7 @@ all-features = true
 rustdoc-args = ["--cfg=docsrs"]
 
 [features]
+default = ["abi-stable"]
 bincode = ["dep:bincode", "dep:solana-sysvar", "serde"]
 dev-context-only-utils = ["bincode", "dep:qualifier_attr"]
 frozen-abi = [
@@ -29,6 +30,7 @@ serde = [
     "dep:serde_derive",
     "solana-pubkey/serde",
 ]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 bincode = { workspace = true, optional = true }
@@ -45,6 +47,8 @@ solana-logger = { workspace = true, optional = true }
 solana-pubkey = { workspace = true }
 solana-sdk-ids = { workspace = true }
 solana-sysvar = { workspace = true, features = ["bincode"], optional = true }
+
+abi_stable = { workspace = true, optional = true }
 
 [dev-dependencies]
 solana-account = { path = ".", features = ["dev-context-only-utils"] }

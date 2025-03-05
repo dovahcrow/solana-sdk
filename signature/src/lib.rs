@@ -13,6 +13,8 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 use core::error::Error;
+#[cfg(feature = "abi-stable")]
+use abi_stable::StableAbi;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 #[cfg(feature = "serde")]
@@ -36,6 +38,7 @@ const MAX_BASE58_SIGNATURE_LEN: usize = 88;
     derive(bytemuck_derive::Pod, bytemuck_derive::Zeroable)
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 pub struct Signature(
     #[cfg_attr(feature = "serde", serde(with = "BigArray"))] [u8; SIGNATURE_BYTES],
 );

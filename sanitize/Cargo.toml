@@ -10,5 +10,11 @@ homepage = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
 
+[features]
+abi-stable = ["dep:abi_stable"]
+
+[dependencies]
+abi_stable = { workspace = true, optional = true }
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

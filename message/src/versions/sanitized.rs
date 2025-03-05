@@ -1,9 +1,13 @@
+#[cfg(feature = "abi-stable")]
+use abi_stable::{ StableAbi};
 use {
     super::VersionedMessage, crate::compiled_instruction::CompiledInstruction,
     solana_address::Address, solana_sanitize::SanitizeError,
 };
 
 /// Wraps a sanitized `VersionedMessage` to provide a safe API
+#[repr(C)]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SanitizedVersionedMessage {
     pub message: VersionedMessage,

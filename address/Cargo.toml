@@ -36,6 +36,7 @@ sha2 = ["dep:solana-sha256-hasher", "error"]
 std = ["decode", "borsh?/std", "serde?/std", "alloc"]
 alloc = []
 syscalls = ["dep:solana-define-syscall", "error"]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 arbitrary = { workspace = true, features = ["derive"], optional = true }
@@ -52,6 +53,7 @@ solana-frozen-abi = { workspace = true, features = ["frozen-abi"], optional = tr
 solana-frozen-abi-macro = { workspace = true, features = ["frozen-abi"], optional = true }
 solana-program-error = { workspace = true, optional = true }
 solana-sanitize = { workspace = true, optional = true }
+abi_stable = { workspace = true, optional = true }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
 curve25519-dalek = { workspace = true, optional = true }

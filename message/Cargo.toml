@@ -35,6 +35,7 @@ serde = [
     "solana-address/serde",
     "solana-hash/serde",
 ]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 bincode = { workspace = true, optional = true }
@@ -52,6 +53,8 @@ solana-sanitize = { workspace = true }
 solana-sdk-ids = { workspace = true }
 solana-short-vec = { workspace = true, optional = true }
 solana-transaction-error = { workspace = true }
+
+abi_stable = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }

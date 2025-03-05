@@ -5,6 +5,8 @@
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
 #[cfg(feature = "std")]
 extern crate std;
+#[cfg(feature = "abi-stable")]
+use abi_stable::StableAbi;
 #[cfg(feature = "bytemuck")]
 use bytemuck_derive::{Pod, Zeroable};
 #[cfg(feature = "serde")]
@@ -43,6 +45,7 @@ pub const MAX_BASE58_LEN: usize = 44;
 #[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize,))]
 #[cfg_attr(feature = "copy", derive(Copy))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(transparent)]
 pub struct Hash(pub(crate) [u8; HASH_BYTES]);

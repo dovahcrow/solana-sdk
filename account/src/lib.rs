@@ -10,6 +10,10 @@ use serde::ser::{Serialize, Serializer};
 use solana_frozen_abi_macro::{frozen_abi, AbiExample};
 #[cfg(feature = "bincode")]
 use solana_sysvar::SysvarSerialize;
+#[cfg(feature = "abi-stable")]
+use abi_stable::{         std_types::{RArc, RVec},
+        StableAbi,
+};
 use {
     solana_account_info::{debug_account_data::*, AccountInfo},
     solana_clock::{Epoch, INITIAL_RENT_EPOCH},
@@ -22,7 +26,7 @@ use {
         mem::MaybeUninit,
         ptr,
         rc::Rc,
-        sync::Arc,
+        slice,
     },
 };
 #[cfg(feature = "bincode")]
@@ -57,7 +61,7 @@ pub struct Account {
 
 // mod because we need 'Account' below to have the name 'Account' to match expected serialization
 #[cfg(feature = "serde")]
-mod account_serialize {
+pub mod account_serialize {
     #[cfg(feature = "frozen-abi")]
     use solana_frozen_abi_macro::{frozen_abi, AbiExample};
     use {
@@ -126,24 +130,26 @@ impl Serialize for AccountSharedData {
 /// An Account with data that is stored on chain
 /// This will be the in-memory representation of the 'Account' struct data.
 /// The existing 'Account' structure cannot easily change due to downstream projects.
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(
     feature = "serde",
     derive(serde_derive::Deserialize),
     serde(from = "Account")
 )]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(PartialEq, Eq, Clone, Default)]
 pub struct AccountSharedData {
     /// lamports in the account
-    lamports: u64,
+    pub lamports: u64,
     /// data held in this account
-    data: Arc<Vec<u8>>,
+    pub data: RArc<RVec<u8>>,
     /// the program that owns this account. If executable, the program that loads this account.
-    owner: Pubkey,
+    pub owner: Pubkey,
     /// this account's data contains a loaded program (and is now read-only)
-    executable: bool,
+    pub executable: bool,
     /// the epoch at which this account will next owe rent
-    rent_epoch: Epoch,
+    pub rent_epoch: Epoch,
 }
 
 /// Compares two ReadableAccounts
@@ -159,10 +165,10 @@ pub fn accounts_equal<T: ReadableAccount, U: ReadableAccount>(me: &T, other: &U)
 
 impl From<AccountSharedData> for Account {
     fn from(mut other: AccountSharedData) -> Self {
-        let account_data = Arc::make_mut(&mut other.data);
+        let account_data = RArc::make_mut(&mut other.data);
         Self {
             lamports: other.lamports,
-            data: std::mem::take(account_data),
+            data: std::mem::take(account_data).into(),
             owner: other.owner,
             executable: other.executable,
             rent_epoch: other.rent_epoch,
@@ -174,7 +180,7 @@ impl From<Account> for AccountSharedData {
     fn from(other: Account) -> Self {
         Self {
             lamports: other.lamports,
-            data: Arc::new(other.data),
+            data: RArc::new(other.data.into()),
             owner: other.owner,
             executable: other.executable,
             rent_epoch: other.rent_epoch,
@@ -319,7 +325,7 @@ impl WritableAccount for AccountSharedData {
     ) -> Self {
         AccountSharedData {
             lamports,
-            data: Arc::new(data),
+            data: RArc::new(data.into()),
             owner,
             executable,
             rent_epoch,
@@ -369,7 +375,7 @@ impl ReadableAccount for Ref<'_, AccountSharedData> {
         AccountSharedData {
             lamports: self.lamports(),
             // avoid data copy here
-            data: Arc::clone(&self.data),
+            data: RArc::clone(&self.data),
             owner: *self.owner(),
             executable: self.executable(),
             rent_epoch: self.rent_epoch(),
@@ -580,16 +586,16 @@ impl Account {
 
 impl AccountSharedData {
     pub fn is_shared(&self) -> bool {
-        Arc::strong_count(&self.data) > 1
+        RArc::strong_count(&self.data) > 1
     }
 
     pub fn reserve(&mut self, additional: usize) {
-        if let Some(data) = Arc::get_mut(&mut self.data) {
+        if let Some(data) = RArc::get_mut(&mut self.data) {
             data.reserve(additional)
         } else {
-            let mut data = Vec::with_capacity(self.data.len().saturating_add(additional));
+            let mut data = RVec::with_capacity(self.data.len().saturating_add(additional));
             data.extend_from_slice(&self.data);
-            self.data = Arc::new(data);
+            self.data = RArc::new(data);
         }
     }
 
@@ -597,12 +603,12 @@ impl AccountSharedData {
         self.data.capacity()
     }
 
-    pub fn data_clone(&self) -> Arc<Vec<u8>> {
-        Arc::clone(&self.data)
+    pub fn data_clone(&self) -> RArc<RVec<u8>> {
+        RArc::clone(&self.data)
     }
 
-    fn data_mut(&mut self) -> &mut Vec<u8> {
-        Arc::make_mut(&mut self.data)
+    fn data_mut(&mut self) -> &mut RVec<u8> {
+        RArc::make_mut(&mut self.data)
     }
 
     pub fn resize(&mut self, new_len: usize, value: u8) {
@@ -615,7 +621,7 @@ impl AccountSharedData {
 
     pub fn set_data_from_slice(&mut self, new_data: &[u8]) {
         // If the buffer isn't shared, we're going to memcpy in place.
-        let Some(data) = Arc::get_mut(&mut self.data) else {
+        let Some(data) = RArc::get_mut(&mut self.data) else {
             // If the buffer is shared, the cheapest thing to do is to clone the
             // incoming slice and replace the buffer.
             return self.set_data(new_data.to_vec());
@@ -654,11 +660,23 @@ impl AccountSharedData {
 
     #[cfg_attr(feature = "dev-context-only-utils", qualifiers(pub))]
     fn set_data(&mut self, data: Vec<u8>) {
-        self.data = Arc::new(data);
+        self.data = RArc::new(data.into());
     }
 
     pub fn spare_data_capacity_mut(&mut self) -> &mut [MaybeUninit<u8>] {
-        self.data_mut().spare_capacity_mut()
+        #[inline]
+        pub fn spare_capacity_mut<T>(data: &mut RVec<T>) -> &mut [MaybeUninit<T>] {
+            // Note:
+            // This method is not implemented in terms of `split_at_spare_mut`,
+            // to prevent invalidation of pointers to the buffer.
+            unsafe {
+                slice::from_raw_parts_mut(
+                    data.as_mut_ptr().add(data.len()) as *mut MaybeUninit<T>,
+                    data.capacity() - data.len(),
+                )
+            }
+        }
+        spare_capacity_mut(self.data_mut())
     }
 
     pub fn new(lamports: u64, space: usize, owner: &Pubkey) -> Self {
@@ -715,7 +733,7 @@ impl AccountSharedData {
 
     pub fn create_from_existing_shared_data(
         lamports: u64,
-        data: Arc<Vec<u8>>,
+        data: RArc<RVec<u8>>,
         owner: Pubkey,
         executable: bool,
         rent_epoch: Epoch,

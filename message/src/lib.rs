@@ -48,6 +48,9 @@ pub mod legacy;
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
 use solana_frozen_abi_macro::AbiExample;
+use {std::collections::HashMap};
+#[cfg(feature = "abi-stable")]
+use abi_stable::{ StableAbi};
 
 #[cfg(not(target_os = "solana"))]
 #[path = ""]
@@ -106,12 +109,14 @@ pub const MESSAGE_HEADER_LENGTH: usize = 3;
 /// access the same read-write accounts are processed sequentially.
 ///
 /// [PoH]: https://docs.solanalabs.com/consensus/synchronization
+#[repr(C)]
 #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 #[cfg_attr(
     feature = "serde",
     derive(Deserialize, Serialize),
     serde(rename_all = "camelCase")
 )]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Default, Debug, PartialEq, Eq, Clone, Copy)]
 pub struct MessageHeader {
     /// The number of signatures required for this message to be considered
@@ -136,4 +141,10 @@ pub struct MessageHeader {
 pub struct AddressLookupTableAccount {
     pub key: Address,
     pub addresses: Vec<Address>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct HashedAddressLookupTableAccount<'a> {
+    pub key: Address,
+    pub addresses: &'a HashMap<Address, usize>,
 }

@@ -7,7 +7,7 @@ use {
 
 /// Collection of static and dynamically loaded keys used to load accounts
 /// during transaction processing.
-#[derive(Clone, Default, Debug, Eq)]
+#[derive(Copy, Clone, Default, Debug, Eq)]
 pub struct AccountKeys<'a> {
     static_keys: &'a [Address],
     dynamic_keys: Option<&'a LoadedAddresses>,
@@ -134,8 +134,8 @@ impl<'a> AccountKeys<'a> {
 
                 Ok(CompiledInstruction {
                     program_id_index: get_account_index(&ix.program_id)?,
-                    data: ix.data.clone(),
-                    accounts,
+                    data: ix.data.clone().into(),
+                    accounts: accounts.into(),
                 })
             })
             .collect()
