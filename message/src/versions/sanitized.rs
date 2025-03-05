@@ -1,10 +1,11 @@
 use {
     super::VersionedMessage, crate::compiled_instruction::CompiledInstruction,
-    solana_pubkey::Pubkey, solana_sanitize::SanitizeError,
+    abi_stable::StableAbi, solana_pubkey::Pubkey, solana_sanitize::SanitizeError,
 };
 
 /// Wraps a sanitized `VersionedMessage` to provide a safe API
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[repr(C)]
+#[derive(Clone, Debug, PartialEq, Eq, StableAbi)]
 pub struct SanitizedVersionedMessage {
     pub message: VersionedMessage,
 }
