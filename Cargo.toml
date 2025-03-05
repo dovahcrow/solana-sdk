@@ -134,6 +134,7 @@ tag-message = "Publish {{crate_name}} v{{version}}"
 consolidate-commits = false
 
 [workspace.dependencies]
+abi_stable = "0.11"
 ahash = "0.8.11"
 anyhow = "1.0.96"
 arbitrary = "1.4.1"

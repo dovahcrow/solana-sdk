@@ -112,6 +112,16 @@
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::wasm_bindgen;
+use {
+    abi_stable::{rvec, std_types::RVec, StableAbi},
+    solana_instruction::Instruction,
+    solana_message::Message,
+    solana_pubkey::Pubkey,
+    solana_sanitize::{Sanitize, SanitizeError},
+    solana_signature::Signature,
+    solana_transaction_error::{TransactionError, TransactionResult as Result},
+    std::result,
+};
 #[cfg(feature = "serde")]
 use {
     serde_derive::{Deserialize, Serialize},
@@ -125,15 +135,6 @@ use {
     solana_sdk_ids::system_program,
     solana_signer::{signers::Signers, SignerError},
     solana_system_interface::instruction::SystemInstruction,
-};
-use {
-    solana_instruction::Instruction,
-    solana_message::Message,
-    solana_pubkey::Pubkey,
-    solana_sanitize::{Sanitize, SanitizeError},
-    solana_signature::Signature,
-    solana_transaction_error::{TransactionError, TransactionResult as Result},
-    std::result,
 };
 
 pub mod sanitized;
@@ -182,6 +183,7 @@ const PACKET_DATA_SIZE: usize = 1280 - 40 - 8;
 /// if the caller has knowledge that the first account of the constructed
 /// transaction's `Message` is both a signer and the expected fee-payer, then
 /// redundantly specifying the fee-payer is not strictly required.
+#[repr(C)]
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg_attr(
     feature = "frozen-abi",
@@ -189,7 +191,7 @@ const PACKET_DATA_SIZE: usize = 1280 - 40 - 8;
     solana_frozen_abi_macro::frozen_abi(digest = "76BDTr3Xm3VP7h4eSiw6pZHKc5yYewDufyia3Yedh6GG")
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[derive(Debug, PartialEq, Default, Eq, Clone)]
+#[derive(Debug, PartialEq, Default, Eq, Clone, StableAbi)]
 pub struct Transaction {
     /// A set of signatures of a serialized [`Message`], signed by the first
     /// keys of the `Message`'s [`account_keys`], where the number of signatures
@@ -200,8 +202,8 @@ pub struct Transaction {
     /// [`MessageHeader`]: https://docs.rs/solana-message/latest/solana_message/struct.MessageHeader.html
     /// [`num_required_signatures`]: https://docs.rs/solana-message/latest/solana_message/struct.MessageHeader.html#structfield.num_required_signatures
     // NOTE: Serialization-related changes must be paired with the direct read at sigverify.
-    #[cfg_attr(feature = "serde", serde(with = "short_vec"))]
-    pub signatures: Vec<Signature>,
+    #[cfg_attr(feature = "serde", serde(with = "short_vec::short_rvec"))]
+    pub signatures: RVec<Signature>,
 
     /// The message to sign.
     pub message: Message,
@@ -308,7 +310,7 @@ impl Transaction {
     /// ```
     pub fn new_unsigned(message: Message) -> Self {
         Self {
-            signatures: vec![Signature::default(); message.header.num_required_signatures as usize],
+            signatures: rvec![Signature::default(); message.header.num_required_signatures as usize],
             message,
         }
     }
