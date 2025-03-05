@@ -126,7 +126,7 @@ pub struct Packet {
     // Bytes past Packet.meta.size are not valid to read from.
     // Use Packet.data(index) to read from the buffer.
     #[cfg_attr(feature = "serde", serde_as(as = "Bytes"))]
-    buffer: [u8; PACKET_DATA_SIZE],
+    pub buffer: [u8; PACKET_DATA_SIZE],
     meta: Meta,
 }
 
