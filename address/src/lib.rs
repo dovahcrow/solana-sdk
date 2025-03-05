@@ -44,6 +44,8 @@ use {
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
     std::string::ToString,
 };
+#[cfg(feature = "abi-stable")]
+use abi_stable::{StableAbi};
 
 /// Number of bytes in an address.
 pub const ADDRESS_BYTES: usize = 32;
@@ -84,6 +86,7 @@ const PDA_MARKER: &[u8; 21] = b"ProgramDerivedAddress";
 #[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
 #[derive(Clone, Copy, Default, Eq, Ord, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 pub struct Address(pub(crate) [u8; 32]);
 
 #[cfg(feature = "sanitize")]

@@ -15,6 +15,7 @@ all-features = true
 rustdoc-args = ["--cfg=docsrs"]
 
 [features]
+default = ["abi-stable"]
 bincode = [
     "dep:bincode",
     "dep:solana-signer",
@@ -36,6 +37,7 @@ serde = [
     "solana-signature/serde",
 ]
 verify = ["blake3", "solana-signature/verify"]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 bincode = { workspace = true, optional = true }
@@ -54,6 +56,8 @@ solana-short-vec = { workspace = true, optional = true }
 solana-signature = { workspace = true }
 solana-signer = { workspace = true, optional = true }
 solana-transaction-error = { workspace = true }
+
+abi_stable = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }

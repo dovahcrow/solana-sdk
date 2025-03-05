@@ -120,6 +120,8 @@ use {
     solana_hash::Hash,
     solana_signer::{signers::Signers, SignerError},
 };
+#[cfg(feature = "abi-stable")]
+use abi_stable::{std_types::RVec,  StableAbi};
 use {
     solana_instruction::Instruction,
     solana_message::{
@@ -173,12 +175,14 @@ const NONCED_TX_MARKER_IX_INDEX: u8 = 0;
 /// if the caller has knowledge that the first account of the constructed
 /// transaction's `Message` is both a signer and the expected fee-payer, then
 /// redundantly specifying the fee-payer is not strictly required.
+#[repr(C)]
 #[cfg_attr(
     feature = "frozen-abi",
     derive(solana_frozen_abi_macro::AbiExample),
     solana_frozen_abi_macro::frozen_abi(digest = "KSndwV1Ezw3xDX3Mz4Sg2vY22dx9mGTCFzo1RxbwaV8")
 )]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "abi-stable", derive(StableAbi))]
 #[derive(Debug, PartialEq, Default, Eq, Clone)]
 pub struct Transaction {
     /// A set of signatures of a serialized [`Message`], signed by the first
@@ -190,8 +194,8 @@ pub struct Transaction {
     /// [`MessageHeader`]: https://docs.rs/solana-message/latest/solana_message/struct.MessageHeader.html
     /// [`num_required_signatures`]: https://docs.rs/solana-message/latest/solana_message/struct.MessageHeader.html#structfield.num_required_signatures
     // NOTE: Serialization-related changes must be paired with the direct read at sigverify.
-    #[cfg_attr(feature = "serde", serde(with = "short_vec"))]
-    pub signatures: Vec<Signature>,
+    #[cfg_attr(feature = "serde", serde(with = "short_vec::short_rvec"))]
+    pub signatures: RVec<Signature>,
 
     /// The message to sign.
     pub message: Message,
@@ -277,7 +281,7 @@ impl Transaction {
     /// ```
     pub fn new_unsigned(message: Message) -> Self {
         Self {
-            signatures: vec![Signature::default(); message.header.num_required_signatures as usize],
+            signatures: vec![Signature::default(); message.header.num_required_signatures as usize].into(),
             message,
         }
     }
