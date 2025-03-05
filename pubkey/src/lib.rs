@@ -14,12 +14,8 @@ use bytemuck_derive::{Pod, Zeroable};
 use serde_derive::{Deserialize, Serialize};
 #[cfg(any(feature = "std", target_arch = "wasm32"))]
 use std::vec::Vec;
-#[cfg(feature = "borsh")]
 use {
-    borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
-    std::string::ToString,
-};
-use {
+    abi_stable::StableAbi,
     core::{
         array,
         convert::{Infallible, TryFrom},
@@ -29,6 +25,11 @@ use {
         str::{from_utf8_unchecked, FromStr},
     },
     num_traits::{FromPrimitive, ToPrimitive},
+};
+#[cfg(feature = "borsh")]
+use {
+    borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
+    std::string::ToString,
 };
 #[cfg(target_arch = "wasm32")]
 use {
@@ -161,7 +162,7 @@ impl From<u64> for PubkeyError {
 #[cfg_attr(all(feature = "borsh", feature = "std"), derive(BorshSchema))]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(feature = "bytemuck", derive(Pod, Zeroable))]
-#[derive(Clone, Copy, Default, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Default, Eq, Ord, PartialEq, PartialOrd, StableAbi)]
 #[cfg_attr(feature = "dev-context-only-utils", derive(Arbitrary))]
 pub struct Pubkey(pub(crate) [u8; 32]);
 
