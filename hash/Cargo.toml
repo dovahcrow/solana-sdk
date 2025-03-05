@@ -21,11 +21,12 @@ borsh = ["dep:borsh"]
 bytemuck = ["copy", "dep:bytemuck", "dep:bytemuck_derive"]
 copy = []
 decode = ["dep:five8"]
-default = []
+default = ["abi-stable"]
 frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro", "std"]
 sanitize = ["dep:solana-sanitize"]
 serde = ["dep:serde", "dep:serde_derive"]
 std = ["borsh?/std", "serde?/std"]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 borsh = { workspace = true, optional = true }
@@ -38,6 +39,8 @@ solana-atomic-u64 = { workspace = true, optional = true }
 solana-frozen-abi = { workspace = true, optional = true, features = ["frozen-abi"] }
 solana-frozen-abi-macro = { workspace = true, optional = true, features = ["frozen-abi"] }
 solana-sanitize = { workspace = true, optional = true }
+
+abi_stable = { workspace = true, optional = true }
 
 [dev-dependencies]
 bs58 = { workspace = true, default-features = false, features = ["alloc"] }

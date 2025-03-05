@@ -134,6 +134,7 @@ consolidate-commits = false
 solana = "2.2.11"
 
 [workspace.dependencies]
+abi_stable = "0.11"
 ahash = "0.8.11"
 anyhow = "1.0.96"
 arbitrary = "1.4.1"

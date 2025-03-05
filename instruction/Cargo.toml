@@ -17,11 +17,12 @@ rustdoc-args = ["--cfg=docsrs"]
 [features]
 bincode = ["dep:bincode", "dep:serde"]
 borsh = ["dep:borsh"]
-default = ["std"]
+default = ["std", "abi-stable"]
 frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro", "serde", "std"]
 serde = ["dep:serde", "dep:serde_derive", "solana-pubkey/serde"]
 std = ["serde?/std", "borsh?/std"]
 syscalls = ["std"]
+abi-stable = ["dep:abi_stable"]
 
 [dependencies]
 bincode = { workspace = true, optional = true }
@@ -32,6 +33,8 @@ solana-frozen-abi = { workspace = true, optional = true }
 solana-frozen-abi-macro = { workspace = true, optional = true }
 solana-instruction-error = { workspace = true, features = ["num-traits"] }
 solana-pubkey = { workspace = true, default-features = false }
+
+abi_stable = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "solana")'.dependencies]
 solana-define-syscall = { workspace = true }
