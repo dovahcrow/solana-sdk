@@ -18,7 +18,7 @@ use {
     crate::{
         compiled_instruction::CompiledInstruction,
         compiled_keys::{CompileError, CompiledKeys},
-        AccountKeys, AddressLookupTableAccount, MessageHeader,
+        AccountKeys, HashedAddressLookupTableAccount, MessageHeader,
     },
     solana_hash::Hash,
     solana_instruction::Instruction,
@@ -265,7 +265,7 @@ impl Message {
     pub fn try_compile(
         payer: &Pubkey,
         instructions: &[Instruction],
-        address_lookup_table_accounts: &[AddressLookupTableAccount],
+        address_lookup_table_accounts: &[HashedAddressLookupTableAccount],
         recent_blockhash: Hash,
     ) -> Result<Self, CompileError> {
         let mut compiled_keys = CompiledKeys::compile(instructions, Some(*payer));

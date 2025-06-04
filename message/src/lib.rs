@@ -47,6 +47,7 @@ pub mod legacy;
 use serde_derive::{Deserialize, Serialize};
 #[cfg(feature = "frozen-abi")]
 use solana_frozen_abi_macro::AbiExample;
+use std::collections::HashMap;
 
 #[cfg(not(target_os = "solana"))]
 #[path = ""]
@@ -129,4 +130,10 @@ pub struct MessageHeader {
 pub struct AddressLookupTableAccount {
     pub key: solana_pubkey::Pubkey,
     pub addresses: Vec<solana_pubkey::Pubkey>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct HashedAddressLookupTableAccount<'a> {
+    pub key: solana_pubkey::Pubkey,
+    pub addresses: &'a HashMap<solana_pubkey::Pubkey, usize>,
 }
