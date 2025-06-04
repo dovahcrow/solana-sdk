@@ -10,6 +10,7 @@ license = { workspace = true }
 edition = { workspace = true }
 
 [dependencies]
+abi_stable = { workspace = true }
 arbitrary = { workspace = true, features = ["derive"], optional = true }
 borsh = { workspace = true, optional = true }
 borsh0-10 = { package = "borsh", version = "0.10.3", optional = true }

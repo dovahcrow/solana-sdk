@@ -12,6 +12,7 @@ use core::{
 extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
+use abi_stable::StableAbi;
 #[cfg(feature = "std")]
 use std::{error::Error, vec::Vec};
 #[cfg(feature = "serde")]
@@ -29,7 +30,7 @@ const MAX_BASE58_SIGNATURE_LEN: usize = 88;
 
 #[repr(transparent)]
 #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
-#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, StableAbi)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct Signature(
     #[cfg_attr(feature = "serde", serde(with = "BigArray"))] [u8; SIGNATURE_BYTES],
